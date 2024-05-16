@@ -4,6 +4,8 @@ mod linux;
 
 use linux::{Capabilities, Cmd, CpuidConfig, InitVm, TdxError};
 
+use std::ffi::c_ulong;
+
 use bitflags::bitflags;
 use kvm_ioctls::{Kvm, VmFd};
 use std::arch::x86_64;
@@ -11,12 +13,26 @@ use std::arch::x86_64;
 // Defined in linux/arch/x86/include/uapi/asm/kvm.h
 const KVM_X86_TDX_VM: u64 = 2;
 
+const KVM_CAP_VM_TYPES: c_ulong = 235;
+
 /// Handle to the TDX VM file descriptor
 pub struct TdxVm {
     pub fd: VmFd,
 }
 
 impl TdxVm {
+    /// Check if the TDX VM type is supported in KVM.
+    pub fn supported(kvm_fd: &Kvm) -> bool {
+        let vm_types = kvm_fd.check_extension_raw(KVM_CAP_VM_TYPES);
+
+        let tdx_vm_type = match i32::try_from(KVM_X86_TDX_VM) {
+            Ok(val) => val,
+            Err(_) => return false,
+        };
+
+        (vm_types & tdx_vm_type) != 0
+    }
+
     /// Create a new TDX VM with KVM
     pub fn new(kvm_fd: &Kvm) -> Result<Self, TdxError> {
         let vm_fd = kvm_fd.create_vm_with_type(KVM_X86_TDX_VM)?;
