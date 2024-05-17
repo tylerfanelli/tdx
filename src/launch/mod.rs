@@ -5,6 +5,7 @@ mod linux;
 use linux::{Capabilities, Cmd, CpuidConfig, InitVm, TdxError};
 
 use bitflags::bitflags;
+use kvm_bindings::{kvm_enable_cap, KVM_CAP_MAX_VCPUS};
 use kvm_ioctls::{Kvm, VmFd};
 use std::arch::x86_64;
 
@@ -46,8 +47,28 @@ impl TdxVm {
         })
     }
 
+    fn max_vcpus_set(&mut self, num: u64) -> Result<(), TdxError> {
+        let mut cap = kvm_enable_cap {
+            cap: KVM_CAP_MAX_VCPUS,
+            ..Default::default()
+        };
+
+        cap.args[0] = num;
+
+        self.fd.enable_cap(&cap)?;
+
+        Ok(())
+    }
+
     /// Do additional VM initialization that is specific to Intel TDX
-    pub fn init_vm(&self, kvm: &Kvm, caps: &TdxCapabilities) -> Result<(), TdxError> {
+    pub fn init_vm(
+        &mut self,
+        kvm: &Kvm,
+        caps: &TdxCapabilities,
+        max_vcpus: u64,
+    ) -> Result<(), TdxError> {
+        self.max_vcpus_set(max_vcpus)?;
+
         let cpuid = kvm
             .get_supported_cpuid(kvm_bindings::KVM_MAX_CPUID_ENTRIES)
             .unwrap();
