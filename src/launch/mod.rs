@@ -18,8 +18,8 @@ pub struct TdxVm {
 
 impl TdxVm {
     /// Create a new TDX VM with KVM
-    pub fn new(kvm_fd: &Kvm) -> Result<Self, TdxError> {
-        let vm_fd = kvm_fd.create_vm_with_type(KVM_X86_TDX_VM)?;
+    pub fn new(kvm: &Kvm) -> Result<Self, TdxError> {
+        let vm_fd = kvm.create_vm_with_type(KVM_X86_TDX_VM)?;
         Ok(Self { fd: vm_fd })
     }
 
@@ -47,8 +47,8 @@ impl TdxVm {
     }
 
     /// Do additional VM initialization that is specific to Intel TDX
-    pub fn init_vm(&self, kvm_fd: &Kvm, caps: &TdxCapabilities) -> Result<(), TdxError> {
-        let cpuid = kvm_fd
+    pub fn init_vm(&self, kvm: &Kvm, caps: &TdxCapabilities) -> Result<(), TdxError> {
+        let cpuid = kvm
             .get_supported_cpuid(kvm_bindings::KVM_MAX_CPUID_ENTRIES)
             .unwrap();
         let mut cpuid_entries: Vec<kvm_bindings::kvm_cpuid_entry2> = cpuid.as_slice().to_vec();
