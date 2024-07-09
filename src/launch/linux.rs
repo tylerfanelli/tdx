@@ -69,7 +69,7 @@ impl From<i32> for TdxError {
 /// CPUID_CONFIG is designed to enumerate how the host VMM may configure the
 /// virtualization done by the Intel TDX module for a single CPUID leaf and
 /// sub-leaf. This is equivalent to `struct kvm_tdx_cpuid_config` in the kernel.
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 #[repr(C)]
 pub struct CpuidConfig {
     /// EAX input value to CPUID
@@ -90,6 +90,19 @@ pub struct CpuidConfig {
 
     /// CPUID configuration information for the EDX register.
     pub edx: u32,
+}
+
+impl fmt::Debug for CpuidConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("TDX CPUID config")
+            .field("leaf", &format!("0x{:x}", self.leaf))
+            .field("sub_leaf", &format!("0x{:x}", self.sub_leaf))
+            .field("eax", &format!("0x{:x}", self.eax))
+            .field("ebx", &format!("0x{:x}", self.ebx))
+            .field("ecx", &format!("0x{:x}", self.ecx))
+            .field("edx", &format!("0x{:x}", self.edx))
+            .finish()
+    }
 }
 
 /// Provides information about the Intel TDX module. This is equivalent to
