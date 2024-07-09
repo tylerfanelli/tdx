@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fmt;
+
 pub const NR_CPUID_CONFIGS: usize = 12;
 
 /// Trust Domain eXtensions sub-ioctl() commands
@@ -92,7 +94,6 @@ pub struct CpuidConfig {
 
 /// Provides information about the Intel TDX module. This is equivalent to
 /// `struct kvm_tdx_capabilities` in the kernel.
-#[derive(Debug)]
 #[repr(C)]
 pub struct Capabilities {
     /// Bitmap where if any certain bit is 0, it must be 0 in any TD's
@@ -156,6 +157,22 @@ impl Default for Capabilities {
             nr_cpuid_configs: NR_CPUID_CONFIGS as u32,
             cpuid_configs: [Default::default(); NR_CPUID_CONFIGS],
         }
+    }
+}
+
+impl fmt::Debug for Capabilities {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("TDX Capabilities")
+            .field("attrs_fixed0", &format!("0x{:x}", self.attrs_fixed0))
+            .field("attrs_fixed1", &format!("0x{:x}", self.attrs_fixed1))
+            .field("xfam_fixed0", &format!("0x{:x}", self.xfam_fixed0))
+            .field("xfam_fixed1", &format!("0x{:x}", self.xfam_fixed1))
+            .field("supported_gpaw", &format!("0x{:x}", self.supported_gpaw))
+            .field("padding", &format!("0x{:x}", self._padding))
+            .field("reserved", &format!("{:?}", self._reserved))
+            .field("nr_cpuid_configs", &format!("{}", self.nr_cpuid_configs))
+            .field("cpuid_configs", &self.cpuid_configs)
+            .finish()
     }
 }
 
